@@ -199,4 +199,5 @@ ANTI GRAVI/
 ## 🔒 Security & Integrity
 
 - **No Exposed Secrets:** Webhook payloads contain purely citizen-entered public grievance information.
-- **Client Form Protection:** In the event of network disruption or unactivated webhook workflows, the form automatically preserves entered data, alerts the citizen, and offers an immediate local ledger archive option.
+- **Client Form Protection:** In the event of network disruption or unactivated webhook workflows, the form automatically preserves entered data, alerts the citizen, and offers an im
+mediate local ledger archive option.
