@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 320" fill="none">
+  <defs>
+    <linearGradient id="space-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0B0F19"/>
+      <stop offset="50%" stop-color="#111827"/>
+      <stop offset="100%" stop-color="#1A1C29"/>
+    </linearGradient>
+    <linearGradient id="planet-grad" x1="20%" y1="20%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F97316"/>
+      <stop offset="50%" stop-color="#C2410C"/>
+      <stop offset="100%" stop-color="#7C2D12"/>
+    </linearGradient>
+    <linearGradient id="ring-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FED7AA" stop-opacity="0.8"/>
+      <stop offset="50%" stop-color="#FB923C" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#FDBA74" stop-opacity="0.9"/>
+    </linearGradient>
+    <radialGradient id="nebula-glow" cx="40%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#6366F1" stop-opacity="0.35"/>
+      <stop offset="60%" stop-color="#A855F7" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#0B0F19" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="500" height="320" rx="20" fill="url(#space-bg)"/>
+  
+  <!-- Cosmic Glow -->
+  <circle cx="280" cy="140" r="160" fill="url(#nebula-glow)"/>
+
+  <!-- Star Field -->
+  <g fill="#FFFFFF">
+    <circle cx="60" cy="70" r="1" opacity="0.6"/><circle cx="110" cy="40" r="1.5" opacity="0.8"/><circle cx="160" cy="95" r="1" opacity="0.4"/>
+    <circle cx="220" cy="45" r="1.2" opacity="0.7"/><circle cx="340" cy="65" r="1" opacity="0.5"/><circle cx="420" cy="40" r="2" opacity="0.9"/>
+    <circle cx="450" cy="110" r="1.2" opacity="0.6"/><circle cx="470" cy="70" r="1" opacity="0.4"/><circle cx="40" cy="180" r="1.5" opacity="0.5"/>
+    <circle cx="95" cy="230" r="1" opacity="0.7"/><circle cx="140" cy="275" r="1.5" opacity="0.6"/><circle cx="380" cy="270" r="1.2" opacity="0.5"/>
+    <circle cx="440" cy="230" r="1" opacity="0.8"/><circle cx="460" cy="290" r="1.5" opacity="0.7"/>
+    <!-- Twinkle stars -->
+    <path d="M420 40 L421 44 L425 45 L421 46 L420 50 L419 46 L415 45 L419 44 Z" fill="#FDE047" opacity="0.9"/>
+    <path d="M110 140 L111 143 L114 144 L111 145 L110 148 L109 145 L106 144 L109 143 Z" fill="#FFFFFF" opacity="0.8"/>
+  </g>
+
+  <!-- Constellation Lines -->
+  <g stroke="rgba(255,255,255,0.2)" stroke-width="1" stroke-dasharray="3 3">
+    <polyline points="70,120 110,140 150,110 190,135"/>
+    <polyline points="330,220 370,250 420,230"/>
+  </g>
+  <circle cx="70" cy="120" r="2.5" fill="#38BDF8"/>
+  <circle cx="110" cy="140" r="2.5" fill="#38BDF8"/>
+  <circle cx="150" cy="110" r="2.5" fill="#38BDF8"/>
+  <circle cx="190" cy="135" r="2.5" fill="#38BDF8"/>
+
+  <!-- Orbital Trajectories -->
+  <ellipse cx="270" cy="165" rx="170" ry="65" stroke="rgba(255,255,255,0.15)" stroke-width="1.5" transform="rotate(-18 270 165)" stroke-dasharray="6 6"/>
+  <ellipse cx="270" cy="165" rx="130" ry="48" stroke="#38BDF8" stroke-width="1.8" transform="rotate(-18 270 165)" stroke-opacity="0.6"/>
+
+  <!-- Main Planet (Gas Giant / Mars style) -->
+  <g transform="translate(230, 115)">
+    <!-- Back of ring -->
+    <ellipse cx="40" cy="50" rx="95" ry="28" stroke="url(#ring-grad)" stroke-width="10" transform="rotate(-20 40 50)" opacity="0.4"/>
+    <!-- Planet body -->
+    <circle cx="40" cy="50" r="46" fill="url(#planet-grad)"/>
+    <!-- Atmosphere shadow -->
+    <path d="M40 4C65 4 86 25 86 50C86 75 65 96 40 96C50 82 56 67 56 50C56 33 50 18 40 4Z" fill="#180B05" opacity="0.55"/>
+    <!-- Front of ring -->
+    <path d="M-45 78 C-10 100, 70 85, 125 35" stroke="url(#ring-grad)" stroke-width="9" fill="none" stroke-linecap="round"/>
+  </g>
+
+  <!-- Aerospace Satellite / Probe -->
+  <g transform="translate(130, 80) rotate(-35)">
+    <!-- Satellite Solar Panels -->
+    <rect x="-35" y="-6" width="28" height="12" rx="2" fill="#1E293B" stroke="#38BDF8" stroke-width="1.5"/>
+    <line x1="-21" y1="-6" x2="-21" y2="6" stroke="#38BDF8" stroke-width="1"/>
+    <rect x="15" y="-6" width="28" height="12" rx="2" fill="#1E293B" stroke="#38BDF8" stroke-width="1.5"/>
+    <line x1="29" y1="-6" x2="29" y2="6" stroke="#38BDF8" stroke-width="1"/>
+    <!-- Central Chassis -->
+    <rect x="-8" y="-9" width="24" height="18" rx="4" fill="#F8FAFC" stroke="#94A3B8" stroke-width="1.5"/>
+    <circle cx="4" cy="0" r="4" fill="#E07A5F"/>
+    <!-- Antenna Dish -->
+    <path d="M-8 0L-16 -5M-8 0L-16 5" stroke="#CBD5E1" stroke-width="1.5"/>
+    <circle cx="-16" cy="0" r="3" fill="#38BDF8"/>
+    <!-- Signal Wave -->
+    <path d="M-22 -8C-26 -4 -26 4 -22 8" stroke="#38BDF8" stroke-width="1.5" fill="none" opacity="0.8"/>
+    <path d="M-26 -12C-32 -6 -32 6 -26 12" stroke="#38BDF8" stroke-width="1.2" fill="none" opacity="0.5"/>
+  </g>
+
+  <!-- Moon / Minor Celestial Body -->
+  <circle cx="390" cy="90" r="14" fill="#E2E8F0"/>
+  <circle cx="386" cy="87" r="3" fill="#CBD5E1"/>
+  <circle cx="394" cy="94" r="2.5" fill="#CBD5E1"/>
+  <circle cx="391" cy="90" r="1.5" fill="#94A3B8"/>
+  <path d="M390 76C398 76 404 82 404 90C404 98 398 104 390 104C394 99 396 95 396 90C396 85 394 81 390 76Z" fill="#64748B" opacity="0.4"/>
+
+  <!-- Telemetry Data Overlay -->
+  <g font-family="monospace" font-size="10" fill="#94A3B8" opacity="0.8">
+    <text x="40" y="280">ORBIT // LEO-GEO 35,786 KM</text>
+    <text x="350" y="280">PROPULSION: ION</text>
+  </g>
+
+  <!-- Badge Tag -->
+  <g transform="translate(35, 30)">
+    <rect width="130" height="24" rx="12" fill="#1E2333"/>
+    <text x="14" y="16" fill="#F97316" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="10" font-weight="600" letter-spacing="1">AEROSPACE TECH</text>
+  </g>
+</svg>
+

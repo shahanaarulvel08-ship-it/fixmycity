@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 320" fill="none">
+  <defs>
+    <linearGradient id="def-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0E1719"/>
+      <stop offset="50%" stop-color="#111C20"/>
+      <stop offset="100%" stop-color="#1B2529"/>
+    </linearGradient>
+    <linearGradient id="emerald-glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10B981"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+    <linearGradient id="radar-sweep" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10B981" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#10B981" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="def-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#10B981" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#0E1719" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="500" height="320" rx="20" fill="url(#def-bg)"/>
+
+  <!-- Radar Scope Background -->
+  <circle cx="250" cy="160" r="120" fill="url(#def-glow)"/>
+  
+  <!-- Radar Concentric Rings -->
+  <circle cx="250" cy="160" r="40" stroke="#10B981" stroke-width="1.2" stroke-opacity="0.3"/>
+  <circle cx="250" cy="160" r="80" stroke="#10B981" stroke-width="1.2" stroke-opacity="0.2" stroke-dasharray="4 4"/>
+  <circle cx="250" cy="160" r="120" stroke="#10B981" stroke-width="1.5" stroke-opacity="0.4"/>
+  <circle cx="250" cy="160" r="135" stroke="#10B981" stroke-width="1" stroke-opacity="0.15"/>
+
+  <!-- Radar Crosshairs -->
+  <line x1="250" y1="20" x2="250" y2="300" stroke="#10B981" stroke-width="1" stroke-opacity="0.2" stroke-dasharray="6 4"/>
+  <line x1="110" y1="160" x2="390" y2="160" stroke="#10B981" stroke-width="1" stroke-opacity="0.2" stroke-dasharray="6 4"/>
+
+  <!-- Radar Sweep Fan -->
+  <path d="M250 160 L335 75 A 120 120 0 0 1 370 160 Z" fill="url(#radar-sweep)"/>
+
+  <!-- Hexagonal Shield Mesh -->
+  <g stroke="#34D399" stroke-width="1.2" stroke-opacity="0.25" fill="none">
+    <polygon points="250,90 285,110 285,150 250,170 215,150 215,110"/>
+    <polygon points="285,110 320,130 320,170 285,190 250,170 250,130"/>
+    <polygon points="215,110 250,130 250,170 215,190 180,170 180,130"/>
+    <polygon points="250,170 285,190 285,230 250,250 215,230 215,190"/>
+  </g>
+
+  <!-- Aerodynamic Stealth Vector Geometry -->
+  <g transform="translate(250, 155)">
+    <!-- Stealth Airframe Silhouette -->
+    <path d="M0 -55 L45 25 L25 20 L0 38 L-25 20 L-45 25 Z" fill="#1E293B" stroke="#34D399" stroke-width="2"/>
+    <path d="M0 -55 L0 38" stroke="#34D399" stroke-width="1" stroke-opacity="0.5"/>
+    <path d="M0 -30 L22 15 L0 8 L-22 15 Z" fill="#0F172A" stroke="#10B981" stroke-width="1.2"/>
+    <!-- Cockpit glow -->
+    <ellipse cx="0" cy="-20" rx="3.5" ry="8" fill="#38BDF8"/>
+    <!-- Jet Afterburners -->
+    <circle cx="-12" cy="24" r="3" fill="#E07A5F"/>
+    <circle cx="12" cy="24" r="3" fill="#E07A5F"/>
+  </g>
+
+  <!-- Target Tracking Brackets / HUD Elements -->
+  <g stroke="#10B981" stroke-width="2">
+    <!-- Top Left Corner -->
+    <path d="M190 115 H180 V125"/>
+    <!-- Top Right Corner -->
+    <path d="M310 115 H320 V125"/>
+    <!-- Bottom Left Corner -->
+    <path d="M190 205 H180 V195"/>
+    <!-- Bottom Right Corner -->
+    <path d="M310 205 H320 V195"/>
+  </g>
+
+  <!-- Radar Blips / Targets -->
+  <circle cx="310" cy="105" r="3.5" fill="#34D399"/>
+  <circle cx="310" cy="105" r="7" stroke="#34D399" stroke-width="1" stroke-dasharray="2 2"/>
+  <circle cx="170" cy="140" r="3" fill="#38BDF8"/>
+  <circle cx="330" cy="210" r="3" fill="#E07A5F"/>
+
+  <!-- Telemetry HUD Text -->
+  <g font-family="monospace" font-size="10" fill="#6EE7B7" opacity="0.85">
+    <text x="40" y="280">DEF_SYS: ACTIVE // RANGE: 400KM</text>
+    <text x="360" y="280">AZIMUTH: 042°</text>
+    <text x="40" y="70">SYS // AVIONICS_STABLE</text>
+  </g>
+
+  <!-- Modern Badge Tag -->
+  <g transform="translate(35, 30)">
+    <rect width="135" height="24" rx="12" fill="#142823"/>
+    <text x="14" y="16" fill="#10B981" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="10" font-weight="600" letter-spacing="1">DEFENCE TECH</text>
+  </g>
+</svg>
+

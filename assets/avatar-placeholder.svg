@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 480" fill="none">
+  <defs>
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F7F3EE"/>
+      <stop offset="50%" stop-color="#EFE9E0"/>
+      <stop offset="100%" stop-color="#E5DCCE"/>
+    </linearGradient>
+    <linearGradient id="skin-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#C58C6B"/>
+      <stop offset="100%" stop-color="#A56E4E"/>
+    </linearGradient>
+    <linearGradient id="accent-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E07A5F"/>
+      <stop offset="100%" stop-color="#C85A3D"/>
+    </linearGradient>
+    <filter id="soft-shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#111113" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="400" height="480" rx="28" fill="url(#bg-grad)"/>
+
+  <!-- Minimal Decorative Grid & Circles -->
+  <circle cx="200" cy="210" r="150" stroke="#DFD5C6" stroke-width="1.5" stroke-dasharray="4 6"/>
+  <circle cx="200" cy="210" r="180" stroke="#DFD5C6" stroke-width="1" opacity="0.6"/>
+  
+  <!-- Subtle Technical Corner Crosses -->
+  <path d="M30 40H44 M37 33V47" stroke="#A79B8A" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M356 40H370 M363 33V47" stroke="#A79B8A" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M30 440H44 M37 433V447" stroke="#A79B8A" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M356 440H370 M363 433V447" stroke="#A79B8A" stroke-width="1.5" stroke-linecap="round"/>
+
+  <!-- Silhouette / Portrait -->
+  <g filter="url(#soft-shadow)">
+    <!-- Shoulders & Blazer -->
+    <path d="M100 480C100 405 135 375 165 365L200 375L235 365C265 375 300 405 300 480Z" fill="#1C1D21"/>
+    <!-- Collar / Inner Top -->
+    <path d="M170 365L200 415L230 365H170Z" fill="#F4EFEA"/>
+    <path d="M200 390L185 365H215L200 390Z" fill="url(#accent-grad)"/>
+
+    <!-- Neck -->
+    <path d="M180 300H220V370C220 375 210 380 200 380C190 380 180 375 180 370V300Z" fill="url(#skin-grad)"/>
+    <path d="M180 335C192 345 208 345 220 335V360C214 365 206 368 200 368C194 368 186 365 180 360V335Z" fill="#945F40" opacity="0.4"/>
+
+    <!-- Head / Jaw -->
+    <path d="M152 200C152 145 174 125 200 125C226 125 248 145 248 200C248 250 226 295 200 295C174 295 152 250 152 200Z" fill="url(#skin-grad)"/>
+
+    <!-- Hair Silhouette (Back) -->
+    <path d="M142 180C138 230 145 285 160 330C165 330 172 320 172 310C158 270 154 220 156 180Z" fill="#151518"/>
+    <path d="M258 180C262 230 255 285 240 330C235 330 228 320 228 310C242 270 246 220 244 180Z" fill="#151518"/>
+
+    <!-- Hair Crown & Waves -->
+    <path d="M142 180C138 120 170 85 200 85C235 85 262 115 258 180C250 140 228 120 200 120C168 120 150 145 142 180Z" fill="#151518"/>
+    <path d="M140 175C150 135 185 128 215 132C185 138 160 158 152 195C146 188 142 182 140 175Z" fill="#24252B"/>
+
+    <!-- Minimal Chic Eyewear -->
+    <rect x="160" y="195" width="34" height="26" rx="8" stroke="#151518" stroke-width="2.5" fill="none"/>
+    <rect x="206" y="195" width="34" height="26" rx="8" stroke="#151518" stroke-width="2.5" fill="none"/>
+    <path d="M194 206H206" stroke="#151518" stroke-width="2.5"/>
+    <path d="M152 202L160 204" stroke="#151518" stroke-width="2"/>
+    <path d="M248 202L240 204" stroke="#151518" stroke-width="2"/>
+
+    <!-- Subtle Facial Features -->
+    <path d="M168 186C174 183 186 183 190 187" stroke="#151518" stroke-width="2" stroke-linecap="round"/>
+    <path d="M210 187C214 183 226 183 232 186" stroke="#151518" stroke-width="2" stroke-linecap="round"/>
+    <path d="M199 220V238L204 240" stroke="#945F40" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M188 260C194 266 206 266 212 260" stroke="#C85A3D" stroke-width="2.5" stroke-linecap="round"/>
+
+    <!-- Ear accessories -->
+    <circle cx="152" cy="225" r="3" fill="#D4A373"/>
+    <circle cx="248" cy="225" r="3" fill="#D4A373"/>
+  </g>
+
+  <!-- Editorial Floating Stamp / Badge -->
+  <g transform="translate(45, 410)">
+    <rect width="190" height="42" rx="21" fill="#111113" fill-opacity="0.95"/>
+    <circle cx="21" cy="21" r="5" fill="#10B981"/>
+    <text x="36" y="26" fill="#FFFFFF" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="12" font-weight="600" letter-spacing="0.5">A.K. SHAHANA • B.E. ECE</text>
+  </g>
+  
+  <!-- Modern Geometric Star Stamp -->
+  <g transform="translate(325, 60)">
+    <circle cx="20" cy="20" r="20" fill="#E07A5F"/>
+    <path d="M20 10L22 17L29 19L22 21L20 28L18 21L11 19L18 17L20 10Z" fill="#FFFFFF"/>
+  </g>
+</svg>
+
