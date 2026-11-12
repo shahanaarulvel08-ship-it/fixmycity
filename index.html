@@ -113,13 +113,20 @@
     const { useState, useEffect, useRef, createContext, useContext, useCallback } = React;
 
     // --- Webhook Service Constants & Utilities ---
-    const DEFAULT_WEBHOOK_URL = 'https://api.agents.snsihub.ai/webhook/3c4473e9-1031-48f3-aa85-ff94a756e06b';
-    const TEST_WEBHOOK_URL = 'https://api.agents.snsihub.ai/webhook-test/3c4473e9-1031-48f3-aa85-ff94a756e06b';
+    const DEFAULT_WEBHOOK_URL = 'https://api.agents.snsihub.ai/webhook/ac9a4721-bb61-4adb-8e14-4bd357cff858';
+    const TEST_WEBHOOK_URL = 'https://api.agents.snsihub.ai/webhook-test/ac9a4721-bb61-4adb-8e14-4bd357cff858';
 
     const getStoredWebhookConfig = () => {
       try {
         const s = localStorage.getItem('fmc_webhook_config');
-        if (s) return JSON.parse(s);
+        if (s) {
+          const parsed = JSON.parse(s);
+          if (parsed?.url && parsed.url.includes('3c4473e9-1031-48f3-aa85-ff94a756e06b')) {
+            parsed.url = DEFAULT_WEBHOOK_URL;
+            localStorage.setItem('fmc_webhook_config', JSON.stringify(parsed));
+          }
+          return parsed;
+        }
       } catch (e) {}
       return { url: DEFAULT_WEBHOOK_URL, timeoutMs: 15000 };
     };
@@ -129,6 +136,57 @@
         localStorage.setItem('fmc_webhook_config', JSON.stringify(cfg));
       } catch (e) {}
     };
+
+    // Upload image to accessible storage before sending to webhook
+    async function uploadImageToStorage(imageDataOrFile) {
+      if (!imageDataOrFile) return null;
+      if (typeof imageDataOrFile === 'string' && (imageDataOrFile.startsWith('http://') || imageDataOrFile.startsWith('https://'))) {
+        return imageDataOrFile;
+      }
+      try {
+        let fileBlob;
+        let filename = 'fmc-complaint-' + Date.now() + '.jpg';
+        if (typeof imageDataOrFile === 'string' && imageDataOrFile.startsWith('data:')) {
+          const parts = imageDataOrFile.split(',');
+          const mimeMatch = parts[0].match(/:(.*?);/);
+          const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+          const bstr = atob(parts[1]);
+          let n = bstr.length;
+          const u8arr = new Uint8Array(n);
+          while (n--) {
+            u8arr[n] = bstr.charCodeAt(n);
+          }
+          fileBlob = new Blob([u8arr], { type: mime });
+          const ext = mime.split('/')[1] || 'jpg';
+          filename = 'fmc-complaint-' + Date.now() + '.' + ext;
+        } else if (imageDataOrFile instanceof Blob || (typeof File !== 'undefined' && imageDataOrFile instanceof File)) {
+          fileBlob = imageDataOrFile;
+          if (imageDataOrFile.name) filename = imageDataOrFile.name;
+        } else {
+          return null;
+        }
+
+        const formData = new FormData();
+        formData.append('file', fileBlob, filename);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 12000);
+        const res = await fetch('https://tmpfiles.org/api/v1/upload', {
+          method: 'POST',
+          body: formData,
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.data?.url) {
+            return data.data.url.replace('tmpfiles.org/', 'tmpfiles.org/dl/');
+          }
+        }
+      } catch (err) {
+        console.warn('Image storage upload notice:', err);
+      }
+      return null;
+    }
 
     // Core Webhook Dispatcher: Sends POST requests and supports auto-fallback to test listener
     async function executeHttpPost(url, payload) {
@@ -529,7 +587,7 @@
                       <span className="font-bold text-slate-900">Production Webhook</span>
                       {cfg.url === DEFAULT_WEBHOOK_URL && <span className="text-[10px] bg-[#2496D8] text-white px-1.5 py-0.2 rounded font-bold">ACTIVE</span>}
                     </div>
-                    <span className="font-mono text-[10px] text-slate-500 truncate block">/webhook/3c4473e9-1031-48f3...</span>
+                    <span className="font-mono text-[10px] text-slate-500 truncate block">/webhook/ac9a4721-bb61-4adb...</span>
                   </button>
 
                   <button
@@ -545,7 +603,7 @@
                       <span className="font-bold text-slate-900">Test Webhook (Draft)</span>
                       {cfg.url === TEST_WEBHOOK_URL && <span className="text-[10px] bg-[#2496D8] text-white px-1.5 py-0.2 rounded font-bold">ACTIVE</span>}
                     </div>
-                    <span className="font-mono text-[10px] text-slate-500 truncate block">/webhook-test/3c4473e9-1031-48f3...</span>
+                    <span className="font-mono text-[10px] text-slate-500 truncate block">/webhook-test/ac9a4721-bb61-4adb...</span>
                   </button>
                 </div>
               </div>
@@ -1740,18 +1798,17 @@
       };
       // ── End camera helpers ────────────────────────────────────────────────────
 
-      const handlePreSubmit = (e) => {
-        e.preventDefault();
+      const handleSubmit = async (e) => {
+        if (e) e.preventDefault();
+        if (submitting) return;
+
         if (!validate()) {
           addToast({ title: 'Incomplete Form', message: 'Please fill in all mandatory fields.', type: 'warning' });
           return;
         }
-        setShowConfirm(true);
-      };
 
-      const handleConfirmSubmit = async () => {
-        const result = await submitComplaint(formData);
         setShowConfirm(false);
+        const result = await submitComplaint(formData);
 
         if (result.success) {
           setSubmittedInfo(result.complaint);
@@ -1774,6 +1831,15 @@
             type: 'warning'
           });
         }
+      };
+
+      const handlePreSubmit = (e) => {
+        if (e) e.preventDefault();
+        if (!validate()) {
+          addToast({ title: 'Incomplete Form', message: 'Please fill in all mandatory fields.', type: 'warning' });
+          return;
+        }
+        setShowConfirm(true);
       };
 
       const handleReset = (ask = true) => {
@@ -1825,7 +1891,7 @@
 
             {/* Form */}
             <div className="bg-white rounded-3xl p-6 sm:p-10 shadow-xl border border-slate-200">
-              <form onSubmit={handlePreSubmit} className="space-y-6" noValidate>
+              <form onSubmit={handleSubmit} className="space-y-6" noValidate>
                 {/* Field 1: NAME & Field 3: EMAIL ID */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
@@ -2229,7 +2295,7 @@
           <ConfirmationModal
             isOpen={showConfirm}
             onClose={() => setShowConfirm(false)}
-            onConfirm={handleConfirmSubmit}
+            onConfirm={handleSubmit}
             formData={formData}
             submitting={submitting}
           />
@@ -2303,8 +2369,16 @@
 
                 <div className="space-y-2">
                   <button
+                    onClick={() => { setErrorModal(false); handleSubmit(); }}
+                    disabled={submitting}
+                    className="w-full py-2.5 rounded-xl text-xs font-bold bg-[#123B63] hover:bg-[#0d2b4a] text-white shadow-sm flex items-center justify-center gap-1.5"
+                  >
+                    <Icons.RefreshCw size={13} className={submitting ? 'animate-spin' : ''} />
+                    <span>Retry Webhook Submission</span>
+                  </button>
+                  <button
                     onClick={handleSaveLocalFallback}
-                    className="w-full py-2.5 rounded-xl text-xs font-bold bg-[#2EAD72] text-white shadow-sm"
+                    className="w-full py-2.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200"
                   >
                     Save to My Complaints Ledger & View Status →
                   </button>
@@ -3014,21 +3088,29 @@
         try { localStorage.setItem('fmc_stored_queries', JSON.stringify(queries)); } catch (e) {}
       }, [queries]);
 
-      // Submit complaint to SNS Workbench Webhook (Includes Email ID and Password)
+      // Submit complaint to SNS Workbench Webhook
       const submitComplaint = async (formData, forceLocal = false) => {
         setSubmitting(true);
         const id = `FMC-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
+        // 1. Upload image to accessible storage if an image is attached
+        let finalImageUrl = null;
+        if (formData.image) {
+          try {
+            finalImageUrl = await uploadImageToStorage(formData.image);
+          } catch (uploadErr) {
+            console.warn('Image upload notice:', uploadErr);
+          }
+        }
+
+        // 2. Exact 7-field JSON payload specified for SNS Workbench webhook
         const payload = {
           name: formData.name?.trim() || '',
           location: formData.location?.trim() || '',
           email: formData.email?.trim().toLowerCase() || user?.email || '',
-          password: user?.password || formData.password || 'CitizenPassword@123',
-          image: formData.image ? formData.image : null,
+          image: finalImageUrl,
           complaint: formData.complaint?.trim() || '',
           queries_and_requests: formData.queries_and_requests?.trim() || null,
-          category: formData.category || 'General Civic Issue',
-          action: 'complaint_submission',
           submitted_at: new Date().toISOString()
         };
 
@@ -3042,7 +3124,7 @@
           complaint: payload.complaint,
           queries_and_requests: payload.queries_and_requests,
           category: formData.category || 'General Civic Issue',
-          image: payload.image,
+          image: finalImageUrl || formData.image,
           status: 'Submitted',
           submitted_at: payload.submitted_at,
           assigned_dept: 'Civic Grievance Redressal Cell',
