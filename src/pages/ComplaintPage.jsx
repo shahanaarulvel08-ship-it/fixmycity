@@ -538,9 +538,12 @@ export default function ComplaintPage({ navigate, onOpenApiModal }) {
     });
   };
 
-  // Trigger Confirmation Dialog
-  const handleOpenConfirmation = (e) => {
-    e.preventDefault();
+  // Form Submission — Directly validates and dispatches to SNS Workbench Webhook
+  const handleSubmit = async (e) => {
+    if (e) e.preventDefault();
+
+    if (submitting) return;
+
     if (!validateForm()) {
       addToast({
         title: 'Incomplete Form',
@@ -549,11 +552,7 @@ export default function ComplaintPage({ navigate, onOpenApiModal }) {
       });
       return;
     }
-    setShowConfirmation(true);
-  };
 
-  // Dispatch to SNS Workbench Webhook
-  const handleConfirmAndSubmit = async () => {
     try {
       const result = await submitComplaint(formData);
 
@@ -573,7 +572,7 @@ export default function ComplaintPage({ navigate, onOpenApiModal }) {
         // Reset form after successful submission
         handleResetForm(false);
       } else {
-        // API failure response: preserve data, display meaningful message
+        // API failure response: preserve data, display meaningful message, do NOT show success
         setLastApiError(result.apiResult);
         setSubmittedComplaintInfo(result.complaint);
         setSubmissionErrorModal(true);
@@ -590,6 +589,20 @@ export default function ComplaintPage({ navigate, onOpenApiModal }) {
       setLastApiError({ error: error.message });
       setSubmissionErrorModal(true);
     }
+  };
+
+  // Trigger Confirmation Dialog (Optional review step)
+  const handleOpenConfirmation = (e) => {
+    if (e) e.preventDefault();
+    if (!validateForm()) {
+      addToast({
+        title: 'Incomplete Form',
+        message: 'Please fill in all required fields marked with *.',
+        type: 'warning'
+      });
+      return;
+    }
+    setShowConfirmation(true);
   };
 
   // Reset Form
@@ -681,7 +694,7 @@ export default function ComplaintPage({ navigate, onOpenApiModal }) {
 
         {/* Form Container */}
         <div className="bg-white rounded-3xl p-6 sm:p-10 shadow-xl shadow-slate-200/60 border border-slate-200">
-          <form onSubmit={handleOpenConfirmation} className="space-y-6" noValidate>
+          <form onSubmit={handleSubmit} className="space-y-6" noValidate>
             {/* Row 1: Name and Email */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {/* Field 1: NAME (Required) */}
@@ -1079,7 +1092,7 @@ export default function ComplaintPage({ navigate, onOpenApiModal }) {
       <ConfirmationModal
         isOpen={showConfirmation}
         onClose={() => setShowConfirmation(false)}
-        onConfirm={handleConfirmAndSubmit}
+        onConfirm={handleSubmit}
         formData={formData}
         submitting={submitting}
       />
@@ -1176,8 +1189,20 @@ export default function ComplaintPage({ navigate, onOpenApiModal }) {
             <div className="flex flex-col gap-2.5">
               <button
                 type="button"
+                onClick={() => {
+                  setSubmissionErrorModal(false);
+                  handleSubmit();
+                }}
+                disabled={submitting}
+                className="w-full py-3 px-4 rounded-xl text-sm font-bold bg-[#123B63] hover:bg-[#0d2b4a] text-white shadow-md transition-colors flex items-center justify-center gap-2"
+              >
+                <RefreshCw size={15} className={submitting ? 'animate-spin' : ''} />
+                <span>Retry Webhook Submission</span>
+              </button>
+              <button
+                type="button"
                 onClick={handleSaveLocallyAndContinue}
-                className="w-full py-3 px-4 rounded-xl text-sm font-bold bg-[#2EAD72] hover:bg-[#269360] text-white shadow-md transition-colors"
+                className="w-full py-2.5 px-4 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
               >
                 Save to My Complaints Ledger & View Status →
               </button>

@@ -89,7 +89,7 @@ export default function ApiSettingsModal({ isOpen, onClose }) {
                   )}
                 </div>
                 <p className="text-[11px] text-slate-500 truncate font-mono">
-                  /webhook/3c4473e9-1031-48f3...
+                  /webhook/ac9a4721-bb61-4adb...
                 </p>
               </button>
 
@@ -111,7 +111,7 @@ export default function ApiSettingsModal({ isOpen, onClose }) {
                   )}
                 </div>
                 <p className="text-[11px] text-slate-500 truncate font-mono">
-                  /webhook-test/3c4473e9-1031-48f3...
+                  /webhook-test/ac9a4721-bb61-4adb...
                 </p>
               </button>
             </div>
@@ -186,13 +186,13 @@ export default function ApiSettingsModal({ isOpen, onClose }) {
                 <span className="text-[#2496D8]">POST application/json</span>
               </div>
               <pre className="text-[11px] leading-relaxed text-emerald-400 overflow-x-auto">{`{
-  "name": "Citizen Name",
-  "location": "Complaint Location",
-  "email": "citizen@example.com",
-  "image": "Uploaded Image URL or Base64 Data (or null)",
-  "complaint": "Description of the complaint",
+  "name": "User's name",
+  "location": "User's location",
+  "email": "User's email",
+  "image": "Image URL or null",
+  "complaint": "Complaint description",
   "queries_and_requests": "Additional queries or requests",
-  "submitted_at": "ISO Timestamp"
+  "submitted_at": "Submission timestamp"
 }`}</pre>
             </div>
 

@@ -1,11 +1,11 @@
 /**
  * Fix My City - SNS Workbench Webhook Integration Service
- * Primary Endpoint: https://api.agents.snsihub.ai/webhook/3c4473e9-1031-48f3-aa85-ff94a756e06b
- * Test Endpoint:    https://api.agents.snsihub.ai/webhook-test/3c4473e9-1031-48f3-aa85-ff94a756e06b
+ * Primary Endpoint: https://api.agents.snsihub.ai/webhook/ac9a4721-bb61-4adb-8e14-4bd357cff858
+ * Test Endpoint:    https://api.agents.snsihub.ai/webhook-test/ac9a4721-bb61-4adb-8e14-4bd357cff858
  */
 
-export const DEFAULT_WEBHOOK_URL = 'https://api.agents.snsihub.ai/webhook/3c4473e9-1031-48f3-aa85-ff94a756e06b';
-export const TEST_WEBHOOK_URL = 'https://api.agents.snsihub.ai/webhook-test/3c4473e9-1031-48f3-aa85-ff94a756e06b';
+export const DEFAULT_WEBHOOK_URL = 'https://api.agents.snsihub.ai/webhook/ac9a4721-bb61-4adb-8e14-4bd357cff858';
+export const TEST_WEBHOOK_URL = 'https://api.agents.snsihub.ai/webhook-test/ac9a4721-bb61-4adb-8e14-4bd357cff858';
 
 const STORAGE_KEY_WEBHOOK_CONFIG = 'fmc_webhook_config';
 
@@ -13,7 +13,13 @@ export function getWebhookConfig() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY_WEBHOOK_CONFIG);
     if (saved) {
-      return JSON.parse(saved);
+      const parsed = JSON.parse(saved);
+      // Auto-migrate if pointing to old default webhook ID
+      if (parsed?.url && parsed.url.includes('3c4473e9-1031-48f3-aa85-ff94a756e06b')) {
+        parsed.url = DEFAULT_WEBHOOK_URL;
+        localStorage.setItem(STORAGE_KEY_WEBHOOK_CONFIG, JSON.stringify(parsed));
+      }
+      return parsed;
     }
   } catch (e) {
     console.error('Failed to parse webhook config from localStorage:', e);
@@ -35,8 +41,106 @@ export function saveWebhookConfig(config) {
 }
 
 /**
+ * Upload an image (base64 data URL, Blob, or File) to an accessible public storage location
+ * Returns the direct publicly-accessible image URL, or null if no image was provided or upload failed
+ */
+export async function uploadImageToStorage(imageDataOrFile) {
+  if (!imageDataOrFile) return null;
+
+  // If already a remote URL (http/https), return it directly
+  if (typeof imageDataOrFile === 'string' && (imageDataOrFile.startsWith('http://') || imageDataOrFile.startsWith('https://'))) {
+    return imageDataOrFile;
+  }
+
+  try {
+    let fileBlob;
+    let filename = `fmc-complaint-${Date.now()}.jpg`;
+
+    if (typeof imageDataOrFile === 'string' && imageDataOrFile.startsWith('data:')) {
+      // Parse base64 data URL to Blob
+      const parts = imageDataOrFile.split(',');
+      const mimeMatch = parts[0].match(/:(.*?);/);
+      const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+      const bstr = atob(parts[1]);
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+      }
+      fileBlob = new Blob([u8arr], { type: mime });
+      const ext = mime.split('/')[1] || 'jpg';
+      filename = `fmc-complaint-${Date.now()}.${ext}`;
+    } else if (imageDataOrFile instanceof Blob || (typeof File !== 'undefined' && imageDataOrFile instanceof File)) {
+      fileBlob = imageDataOrFile;
+      if (imageDataOrFile.name) filename = imageDataOrFile.name;
+    } else {
+      return null;
+    }
+
+    const formData = new FormData();
+    formData.append('file', fileBlob, filename);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+    const response = await fetch('https://tmpfiles.org/api/v1/upload', {
+      method: 'POST',
+      body: formData,
+      signal: controller.signal
+    });
+
+    clearTimeout(timeoutId);
+
+    if (response.ok) {
+      const result = await response.json();
+      if (result?.data?.url) {
+        // Convert to direct download/render URL
+        // e.g. https://tmpfiles.org/12345/image.jpg -> https://tmpfiles.org/dl/12345/image.jpg
+        return result.data.url.replace('tmpfiles.org/', 'tmpfiles.org/dl/');
+      }
+    }
+  } catch (err) {
+    console.warn('Image storage upload notice:', err);
+  }
+
+  return null;
+}
+
+/**
+ * Format complaint payload according to SNS Workbench specifications:
+ * Structure:
+ * {
+ *   "name": "User's name",
+ *   "location": "User's location",
+ *   "email": "User's email",
+ *   "image": "Image URL or null",
+ *   "complaint": "Complaint description",
+ *   "queries_and_requests": "Additional queries or requests",
+ *   "submitted_at": "Submission timestamp"
+ * }
+ */
+export function buildComplaintPayload({
+  name,
+  location,
+  email,
+  image,
+  complaint,
+  queries_and_requests,
+  submitted_at
+}) {
+  return {
+    name: name?.trim() || '',
+    location: location?.trim() || '',
+    email: email?.trim().toLowerCase() || '',
+    image: image || null,
+    complaint: complaint?.trim() || '',
+    queries_and_requests: queries_and_requests?.trim() || null,
+    submitted_at: submitted_at || new Date().toISOString()
+  };
+}
+
+/**
  * Sends authentication credentials to the SNS Workbench Webhook
- * Explicitly indicates whether it is a "login" or "new account"
  */
 export async function sendAuthCredentialsToWebhook({
   email,
@@ -54,9 +158,9 @@ export async function sendAuthCredentialsToWebhook({
   const payload = {
     email: email ? email.trim().toLowerCase() : '',
     password: password || '',
-    account_type: eventLabel,    // "login" or "new account"
-    auth_event: eventLabel,      // "login" or "new account"
-    type: eventLabel,            // "login" or "new account"
+    account_type: eventLabel,
+    auth_event: eventLabel,
+    type: eventLabel,
     action: action || eventLabel,
     is_new_account: Boolean(isNewAccount),
     description: isNewAccount
@@ -68,37 +172,6 @@ export async function sendAuthCredentialsToWebhook({
   };
 
   return await dispatchToWebhookWithFallback(primaryUrl, payload);
-}
-
-/**
- * Format complaint payload according to SNS Workbench specifications:
- * Includes citizen credentials and indicates complaint submission action.
- */
-export function buildComplaintPayload({
-  name,
-  location,
-  email,
-  password,
-  image,
-  complaint,
-  queries_and_requests,
-  category,
-  id
-}) {
-  return {
-    id: id || `FMC-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
-    name: name?.trim() || '',
-    location: location?.trim() || '',
-    email: email?.trim().toLowerCase() || '',
-    password: password || '',
-    account_type: 'existing_account_complaint',
-    image: image ? image : null,
-    complaint: complaint?.trim() || '',
-    queries_and_requests: queries_and_requests?.trim() || null,
-    category: category || 'Civic Issue',
-    action: 'complaint_submission',
-    submitted_at: new Date().toISOString()
-  };
 }
 
 /**
@@ -222,28 +295,20 @@ export async function submitComplaintToWebhook(payload, customUrl = null) {
 }
 
 /**
- * Diagnostic ping to test webhook connectivity with email & password
+ * Diagnostic ping to test webhook connectivity
  */
-export async function testWebhookHealth(url = null, isNewAccount = false) {
+export async function testWebhookHealth(url = null) {
   const config = getWebhookConfig();
   const targetUrl = url || config.url || DEFAULT_WEBHOOK_URL;
-  const eventLabel = isNewAccount ? 'new account' : 'login';
 
   try {
     const res = await dispatchToWebhookWithFallback(targetUrl, {
-      name: isNewAccount ? "New Resident Test" : "Existing Citizen Test",
-      email: isNewAccount ? "new.citizen@fixmycity.org" : "alex.morgan@fixmycity.org",
-      password: isNewAccount ? "NewCitizenPass@123" : "Password@123",
-      account_type: eventLabel,
-      auth_event: eventLabel,
-      type: eventLabel,
-      action: eventLabel,
-      is_new_account: Boolean(isNewAccount),
-      description: isNewAccount ? 'Diagnostic ping: new account' : 'Diagnostic ping: login',
-      location: "Central Operations",
+      name: "Citizen Diagnostic Test",
+      location: "Central Ward Operations",
+      email: "diagnostic@fixmycity.org",
       image: null,
-      complaint: `Automated diagnostic test ping verifying [${eventLabel}] event delivery to SNS Workbench`,
-      queries_and_requests: "Diagnostic ping",
+      complaint: "Automated diagnostic test ping verifying webhook connectivity to SNS Workbench",
+      queries_and_requests: "Diagnostic health verification",
       submitted_at: new Date().toISOString()
     });
 

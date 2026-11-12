@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { INITIAL_COMPLAINTS, INITIAL_QUERIES } from '../constants/mockData';
-import { submitComplaintToWebhook, buildComplaintPayload } from '../services/webhookService';
+import { submitComplaintToWebhook, buildComplaintPayload, uploadImageToStorage } from '../services/webhookService';
 import { useAuth } from './AuthContext';
 
 const ComplaintContext = createContext(null);
@@ -58,19 +58,35 @@ export function ComplaintProvider({ children }) {
 
   /**
    * Submits complaint to SNS Workbench Webhook API
-   * Includes email and password so the webhook receives credentials
+   * Automatically uploads image to accessible storage first if present,
+   * constructs the required payload, and dispatches via HTTP POST.
    */
   const submitComplaint = async (formData, forceLocalSaveOnFailure = false) => {
     setSubmitting(true);
     const generatedId = `FMC-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
+    // 1. Upload image to accessible storage if an image is attached
+    let finalImageUrl = null;
+    if (formData.image) {
+      try {
+        finalImageUrl = await uploadImageToStorage(formData.image);
+      } catch (uploadErr) {
+        console.warn('Image upload notice:', uploadErr);
+      }
+    }
+
+    // 2. Build exact JSON structure required by SNS Workbench
     const payload = buildComplaintPayload({
-      ...formData,
+      name: formData.name,
+      location: formData.location,
       email: formData.email || user?.email || '',
-      password: formData.password || user?.password || 'CitizenPassword@123',
-      id: generatedId
+      image: finalImageUrl,
+      complaint: formData.complaint,
+      queries_and_requests: formData.queries_and_requests,
+      submitted_at: new Date().toISOString()
     });
 
+    // 3. Dispatch to webhook
     const apiResult = await submitComplaintToWebhook(payload);
     setLastSubmissionResult(apiResult);
 
@@ -90,7 +106,7 @@ export function ComplaintProvider({ children }) {
       complaint: payload.complaint,
       queries_and_requests: payload.queries_and_requests,
       category: formData.category || 'General Civic Issue',
-      image: payload.image,
+      image: finalImageUrl || formData.image,
       status: 'Submitted',
       submitted_at: payload.submitted_at,
       assigned_dept: 'Civic Grievance Redressal Cell',
@@ -108,6 +124,7 @@ export function ComplaintProvider({ children }) {
       api_status: apiResult.success ? 'synced' : 'pending_sync'
     };
 
+    // Save to existing database only if webhook confirmed success OR if user explicitly forced local save
     if (apiResult.success || forceLocalSaveOnFailure) {
       setComplaints((prev) => [newComplaintRecord, ...prev]);
     }

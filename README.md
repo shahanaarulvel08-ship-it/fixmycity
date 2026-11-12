@@ -31,7 +31,7 @@ Fix My City is a civilian complaint management web application engineered for mo
   - **Form Controls:** "Submit Complaint", "Reset Form", "Cancel".
   - **Confirmation Dialog:** Full modal review before final dispatch.
 - **SNS Workbench Webhook Integration:**
-  - Direct HTTPS `POST` integration with `https://api.agents.snsihub.ai/webhook/3c4473e9-1031-48f3-aa85-ff94a756e06b`.
+  - Direct HTTPS `POST` integration with `https://api.agents.snsihub.ai/webhook/ac9a4721-bb61-4adb-8e14-4bd357cff858`.
   - Configurable Webhook Settings Modal: easily switch to test mode (`/webhook-test/...`) or ping test endpoint.
   - On Success: *"Your complaint has been successfully submitted!"* and *"Thank you for helping us make our city better."*
   - On Failure: Displays meaningful server notice and **preserves all entered form data** with an instant local archive fallback.
@@ -65,7 +65,7 @@ Fix My City is a civilian complaint management web application engineered for mo
 
 ### Endpoint URL
 ```http
-POST https://api.agents.snsihub.ai/webhook/3c4473e9-1031-48f3-aa85-ff94a756e06b
+POST https://api.agents.snsihub.ai/webhook/ac9a4721-bb61-4adb-8e14-4bd357cff858
 ```
 
 ### Request Headers
@@ -94,15 +94,12 @@ Sent whenever a citizen submits a public grievance:
 ```json
 {
   "name": "Citizen Name",
-  "email": "citizen@example.com",
-  "password": "CitizenPassword@123",
   "location": "Complaint Location",
-  "image": "data:image/jpeg;base64,... (or null)",
+  "email": "citizen@example.com",
+  "image": "https://tmpfiles.org/dl/... (or null)",
   "complaint": "Description of the civic issue",
-  "queries_and_requests": "Additional queries or requests (or null)",
-  "category": "Roads & Potholes",
-  "action": "complaint_submission",
-  "submitted_at": "2026-11-10T11:00:00.000Z"
+  "queries_and_requests": "Additional queries or requests",
+  "submitted_at": "2026-11-12T11:00:00.000Z"
 }
 ```
 
