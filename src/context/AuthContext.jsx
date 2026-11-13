@@ -33,13 +33,42 @@ export function AuthProvider({ children }) {
 
   const [loading, setLoading] = useState(false);
 
-  // Citizen Login (Existing Account)
+  // Citizen Login (Existing Account) — Authenticates via SNS Workbench Webhook
   const login = async (email, password, rememberMe = true) => {
     setLoading(true);
 
     const cleanEmail = email.trim().toLowerCase();
     const cleanPassword = password || '';
 
+    let apiResult = null;
+    try {
+      apiResult = await sendAuthCredentialsToWebhook({
+        email: cleanEmail,
+        password: cleanPassword,
+        isNewAccount: false,
+        action: 'login'
+      });
+    } catch (err) {
+      setLoading(false);
+      throw new Error(err.message || 'Unable to reach SNS Workbench authentication server.');
+    }
+
+    // STRICT REQUIREMENT: Only allow user to next dashboard page if code 200 is received
+    if (!apiResult || apiResult.status !== 200) {
+      setLoading(false);
+      const status = apiResult?.status || 0;
+      let errorMsg = `Authentication failed (HTTP ${status || 'Denied'}). Access denied.`;
+      if (status === 400) {
+        errorMsg = 'Invalid email or password (HTTP 400). Please check your credentials and try again.';
+      } else if (status === 404) {
+        errorMsg = 'Authentication service or account not found (HTTP 404). Please verify your webhook workflow.';
+      } else if (apiResult?.error) {
+        errorMsg = `${apiResult.error} (HTTP ${status})`;
+      }
+      throw new Error(errorMsg);
+    }
+
+    // Code 200 received: establish session and allow access to dashboard
     let citizen = {
       name: email.split('@')[0].replace(/[\._]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
       email: cleanEmail,
@@ -57,20 +86,6 @@ export function AuthProvider({ children }) {
       citizen = { ...DEMO_USER, password: cleanPassword || DEMO_USER.password, isLoggedIn: true };
     }
 
-    // Explicitly send "login" event with email ID and password to SNS Workbench Webhook
-    try {
-      await sendAuthCredentialsToWebhook({
-        email: cleanEmail,
-        password: cleanPassword,
-        isNewAccount: false,
-        action: 'login',
-        name: citizen.name,
-        location: citizen.location
-      });
-    } catch (e) {
-      console.log('Webhook notice on login dispatch:', e);
-    }
-
     setUser(citizen);
     if (rememberMe) {
       localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(citizen));
@@ -79,15 +94,13 @@ export function AuthProvider({ children }) {
     return citizen;
   };
 
-  // Demo Citizen Login (Existing Account)
+  // Demo Citizen Login — Also verifies via SNS Workbench Webhook
   const loginDemo = async () => {
     setLoading(true);
-    setUser(DEMO_USER);
-    localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(DEMO_USER));
 
-    // Explicitly send "login" event with demo credentials to SNS Workbench Webhook
+    let apiResult = null;
     try {
-      await sendAuthCredentialsToWebhook({
+      apiResult = await sendAuthCredentialsToWebhook({
         email: DEMO_USER.email,
         password: DEMO_USER.password,
         isNewAccount: false,
@@ -95,10 +108,18 @@ export function AuthProvider({ children }) {
         name: DEMO_USER.name,
         location: DEMO_USER.location
       });
-    } catch (e) {
-      console.log('Webhook notice on demo login dispatch:', e);
+    } catch (err) {
+      setLoading(false);
+      throw new Error(err.message || 'Unable to reach SNS Workbench authentication server.');
     }
 
+    if (!apiResult || apiResult.status !== 200) {
+      setLoading(false);
+      throw new Error(`Demo login rejected by SNS Workbench (HTTP ${apiResult?.status || 'Denied'}).`);
+    }
+
+    setUser(DEMO_USER);
+    localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(DEMO_USER));
     setLoading(false);
     return DEMO_USER;
   };

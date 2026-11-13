@@ -63,9 +63,13 @@ Fix My City is a civilian complaint management web application engineered for mo
 
 ## 📡 SNS Workbench Webhook Integration
 
-### Endpoint URL
+### Endpoint URLs
 ```http
+# Complaint Grievance Dispatch Webhook
 POST https://api.agents.snsihub.ai/webhook/ac9a4721-bb61-4adb-8e14-4bd357cff858
+
+# Citizen Login & Identity Authentication Webhook
+POST https://api.agents.snsihub.ai/webhook/3c4473e9-1031-48f3-aa85-ff94a756e06b
 ```
 
 ### Request Headers
@@ -77,7 +81,7 @@ Accept: application/json, text/plain, */*
 ### JSON Payload Schemas
 
 #### 1. Authentication (Login / Registration / Demo Login)
-Sent whenever a citizen logs in, registers, or uses demo credentials:
+Sent whenever a citizen logs in, registers, or uses demo credentials to verify identity:
 ```json
 {
   "email": "alex.morgan@fixmycity.org",
@@ -85,9 +89,10 @@ Sent whenever a citizen logs in, registers, or uses demo credentials:
   "action": "login",
   "name": "Alex Morgan",
   "location": "Ward 14, Central District",
-  "submitted_at": "2026-11-10T09:40:00.000Z"
+  "submitted_at": "2026-11-13T04:00:00.000Z"
 }
 ```
+> **Gatekeeper Rule:** Only when the authentication webhook returns **HTTP 200** is the user granted a session and permitted to proceed to the main citizen dashboard (`/home`). Any non-200 response (e.g. HTTP 400, 404, or network timeout) denies access, displays an authentication failure alert, and keeps the user on the login screen.
 
 #### 2. Complaint Submission
 Sent whenever a citizen submits a public grievance:

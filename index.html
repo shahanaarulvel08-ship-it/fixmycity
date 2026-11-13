@@ -113,6 +113,9 @@
     const { useState, useEffect, useRef, createContext, useContext, useCallback } = React;
 
     // --- Webhook Service Constants & Utilities ---
+    const AUTH_WEBHOOK_URL = 'https://api.agents.snsihub.ai/webhook/3c4473e9-1031-48f3-aa85-ff94a756e06b';
+    const AUTH_TEST_WEBHOOK_URL = 'https://api.agents.snsihub.ai/webhook-test/3c4473e9-1031-48f3-aa85-ff94a756e06b';
+
     const DEFAULT_WEBHOOK_URL = 'https://api.agents.snsihub.ai/webhook/ac9a4721-bb61-4adb-8e14-4bd357cff858';
     const TEST_WEBHOOK_URL = 'https://api.agents.snsihub.ai/webhook-test/ac9a4721-bb61-4adb-8e14-4bd357cff858';
 
@@ -291,7 +294,7 @@
         location: location || '',
         submitted_at: new Date().toISOString()
       };
-      return await dispatchWebhook(payload);
+      return await dispatchWebhook(payload, AUTH_WEBHOOK_URL);
     }
 
     async function sendComplaintToWebhook(payload, customUrl = null) {
@@ -1055,6 +1058,7 @@
       const [showPassword, setShowPassword] = useState(false);
       const [rememberMe, setRememberMe] = useState(true);
       const [errors, setErrors] = useState({});
+      const [authError, setAuthError] = useState(null);
 
       const validate = () => {
         const errs = {};
@@ -1069,19 +1073,27 @@
       const handleSubmit = async (e) => {
         e.preventDefault();
         if (!validate()) return;
+        setAuthError(null);
         try {
           await login(email, password, rememberMe);
-          addToast({ title: 'Welcome Back!', message: 'Successfully signed in to Fix My City.', type: 'success' });
+          addToast({ title: 'Authentication Successful', message: 'Identity verified by SNS Workbench (HTTP 200). Welcome back!', type: 'success' });
           navigate('/home');
         } catch (err) {
-          addToast({ title: 'Sign In Failed', message: err.message, type: 'error' });
+          setAuthError(err.message || 'Authentication failed. Please check credentials.');
+          addToast({ title: 'Sign In Failed', message: err.message, type: 'error', duration: 7000 });
         }
       };
 
-      const handleDemo = () => {
-        loginDemo();
-        addToast({ title: 'Demo Citizen Access', message: 'Signed in as verified resident Alex Morgan (Ward 14).', type: 'success' });
-        navigate('/home');
+      const handleDemo = async () => {
+        setAuthError(null);
+        try {
+          await loginDemo();
+          addToast({ title: 'Demo Citizen Access', message: 'Signed in as verified resident Alex Morgan (HTTP 200).', type: 'success' });
+          navigate('/home');
+        } catch (err) {
+          setAuthError(err.message || 'Demo authentication failed.');
+          addToast({ title: 'Demo Sign In Failed', message: err.message, type: 'error', duration: 7000 });
+        }
       };
 
       return (
@@ -1124,6 +1136,16 @@
                   1-Click Demo Login →
                 </button>
               </div>
+
+              {authError && (
+                <div className="mb-4 p-3 rounded-2xl bg-rose-50 border border-rose-200 text-xs text-rose-800 flex items-start gap-2 animate-fade-in">
+                  <Icons.AlertCircle size={16} className="text-rose-500 shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="font-bold">Authentication Rejected</p>
+                    <p className="mt-0.5 text-rose-700">{authError}</p>
+                  </div>
+                </div>
+              )}
 
               <form onSubmit={handleSubmit} className="space-y-4" noValidate>
                 <div>
@@ -2947,8 +2969,9 @@
         };
 
         // Forward Email ID and Password to SNS Workbench Webhook as "login"
+        let apiResult = null;
         try {
-          await sendAuthCredentialsToWebhook({
+          apiResult = await sendAuthCredentialsToWebhook({
             email: cleanEmail,
             password: cleanPassword,
             isNewAccount: false,
@@ -2957,7 +2980,23 @@
             location: u.location
           });
         } catch (err) {
-          console.log('Webhook login dispatch notice:', err);
+          setLoading(false);
+          throw new Error(err.message || 'Unable to connect to SNS Workbench authentication server.');
+        }
+
+        // STRICT REQUIREMENT: Only allow user to next dashboard page if code 200 is received
+        if (!apiResult || apiResult.status !== 200) {
+          setLoading(false);
+          const status = apiResult?.status || 0;
+          let errorMsg = `Authentication failed (HTTP ${status || 'Denied'}). Access denied.`;
+          if (status === 400) {
+            errorMsg = 'Invalid email or password (HTTP 400). Please check your credentials and try again.';
+          } else if (status === 404) {
+            errorMsg = 'Authentication service or account not found (HTTP 404). Please verify your webhook workflow.';
+          } else if (apiResult?.error) {
+            errorMsg = `${apiResult.error} (HTTP ${status})`;
+          }
+          throw new Error(errorMsg);
         }
 
         setUser(u);
@@ -2981,8 +3020,9 @@
         };
 
         // Forward Demo Email ID and Password to SNS Workbench Webhook as "login"
+        let apiResult = null;
         try {
-          await sendAuthCredentialsToWebhook({
+          apiResult = await sendAuthCredentialsToWebhook({
             email: demo.email,
             password: demo.password,
             isNewAccount: false,
@@ -2991,7 +3031,13 @@
             location: demo.location
           });
         } catch (err) {
-          console.log('Webhook demo login dispatch notice:', err);
+          setLoading(false);
+          throw new Error(err.message || 'Unable to connect to SNS Workbench authentication server.');
+        }
+
+        if (!apiResult || apiResult.status !== 200) {
+          setLoading(false);
+          throw new Error(`Demo login rejected by SNS Workbench (HTTP ${apiResult?.status || 'Denied'}).`);
         }
 
         setUser(demo);

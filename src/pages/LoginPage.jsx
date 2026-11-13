@@ -14,6 +14,7 @@ export default function LoginPage({ navigate }) {
   const [errors, setErrors] = useState({});
   const [forgotModalOpen, setForgotModalOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
+  const [authError, setAuthError] = useState(null);
 
   const validate = () => {
     const errs = {};
@@ -36,32 +37,46 @@ export default function LoginPage({ navigate }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
+    setAuthError(null);
 
     try {
       await login(email, password, rememberMe);
       addToast({
-        title: 'Welcome Back!',
-        message: 'You have successfully signed in to Fix My City.',
+        title: 'Authentication Successful',
+        message: 'Identity verified by SNS Workbench (HTTP 200). Welcome back!',
         type: 'success'
       });
       navigate('/home');
     } catch (err) {
+      setAuthError(err.message || 'Unable to authenticate. Please check credentials.');
       addToast({
         title: 'Sign In Failed',
         message: err.message || 'Unable to authenticate. Please check credentials.',
-        type: 'error'
+        type: 'error',
+        duration: 7000
       });
     }
   };
 
   const handleDemoLogin = async () => {
-    loginDemo();
-    addToast({
-      title: 'Demo Citizen Access Granted',
-      message: 'Signed in as verified resident Alex Morgan (Ward 14).',
-      type: 'success'
-    });
-    navigate('/home');
+    setAuthError(null);
+    try {
+      await loginDemo();
+      addToast({
+        title: 'Demo Citizen Access Granted',
+        message: 'Verified resident Alex Morgan authenticated via SNS Workbench (HTTP 200).',
+        type: 'success'
+      });
+      navigate('/home');
+    } catch (err) {
+      setAuthError(err.message || 'Demo authentication failed.');
+      addToast({
+        title: 'Demo Sign In Failed',
+        message: err.message || 'Unable to authenticate demo citizen.',
+        type: 'error',
+        duration: 7000
+      });
+    }
   };
 
   const handleForgotSubmit = (e) => {
@@ -127,6 +142,16 @@ export default function LoginPage({ navigate }) {
               1-Click Demo Login →
             </button>
           </div>
+
+          {authError && (
+            <div className="mb-5 p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-xs text-rose-800 flex items-start gap-2.5 animate-fade-in">
+              <AlertCircle size={17} className="text-rose-500 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="font-bold">Authentication Rejected</p>
+                <p className="mt-0.5 text-rose-700">{authError}</p>
+              </div>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-5" noValidate>
             {/* Email Field */}

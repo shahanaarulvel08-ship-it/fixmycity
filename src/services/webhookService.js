@@ -1,11 +1,17 @@
 /**
  * Fix My City - SNS Workbench Webhook Integration Service
- * Primary Endpoint: https://api.agents.snsihub.ai/webhook/ac9a4721-bb61-4adb-8e14-4bd357cff858
- * Test Endpoint:    https://api.agents.snsihub.ai/webhook-test/ac9a4721-bb61-4adb-8e14-4bd357cff858
+ * Complaint Endpoint:  https://api.agents.snsihub.ai/webhook/ac9a4721-bb61-4adb-8e14-4bd357cff858
+ * Login Auth Endpoint: https://api.agents.snsihub.ai/webhook/3c4473e9-1031-48f3-aa85-ff94a756e06b
  */
 
-export const DEFAULT_WEBHOOK_URL = 'https://api.agents.snsihub.ai/webhook/ac9a4721-bb61-4adb-8e14-4bd357cff858';
-export const TEST_WEBHOOK_URL = 'https://api.agents.snsihub.ai/webhook-test/ac9a4721-bb61-4adb-8e14-4bd357cff858';
+export const AUTH_WEBHOOK_URL = 'https://api.agents.snsihub.ai/webhook/3c4473e9-1031-48f3-aa85-ff94a756e06b';
+export const AUTH_TEST_WEBHOOK_URL = 'https://api.agents.snsihub.ai/webhook-test/3c4473e9-1031-48f3-aa85-ff94a756e06b';
+
+export const COMPLAINT_WEBHOOK_URL = 'https://api.agents.snsihub.ai/webhook/ac9a4721-bb61-4adb-8e14-4bd357cff858';
+export const COMPLAINT_TEST_WEBHOOK_URL = 'https://api.agents.snsihub.ai/webhook-test/ac9a4721-bb61-4adb-8e14-4bd357cff858';
+
+export const DEFAULT_WEBHOOK_URL = COMPLAINT_WEBHOOK_URL;
+export const TEST_WEBHOOK_URL = COMPLAINT_TEST_WEBHOOK_URL;
 
 const STORAGE_KEY_WEBHOOK_CONFIG = 'fmc_webhook_config';
 
@@ -141,6 +147,8 @@ export function buildComplaintPayload({
 
 /**
  * Sends authentication credentials to the SNS Workbench Webhook
+ * Link: https://api.agents.snsihub.ai/webhook/3c4473e9-1031-48f3-aa85-ff94a756e06b
+ * Returns HTTP status code (200, 400, 404, etc.)
  */
 export async function sendAuthCredentialsToWebhook({
   email,
@@ -150,18 +158,15 @@ export async function sendAuthCredentialsToWebhook({
   name = '',
   location = ''
 }) {
-  const config = getWebhookConfig();
-  const primaryUrl = config.url || DEFAULT_WEBHOOK_URL;
-
   const eventLabel = isNewAccount ? 'new account' : 'login';
 
   const payload = {
     email: email ? email.trim().toLowerCase() : '',
     password: password || '',
+    action: action || eventLabel,
     account_type: eventLabel,
     auth_event: eventLabel,
     type: eventLabel,
-    action: action || eventLabel,
     is_new_account: Boolean(isNewAccount),
     description: isNewAccount
       ? 'New civilian account registered'
@@ -171,7 +176,7 @@ export async function sendAuthCredentialsToWebhook({
     submitted_at: new Date().toISOString()
   };
 
-  return await dispatchToWebhookWithFallback(primaryUrl, payload);
+  return await dispatchToWebhookWithFallback(AUTH_WEBHOOK_URL, payload);
 }
 
 /**
